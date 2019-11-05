@@ -1,4 +1,4 @@
-const wallpaper = require('wallpaper')
+const wallpaper = require('./wallpaper')
 const path = require('path')
 
 // 图片地址,随机拿一张
