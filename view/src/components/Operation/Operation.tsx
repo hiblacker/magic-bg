@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { withStyles } from '@material-ui/core/styles';
 import { green } from '@material-ui/core/colors';
 import Checkbox, { CheckboxProps } from '@material-ui/core/Checkbox';
+import FormControlLabel from '@material-ui/core/FormControlLabel';
 import './Operation.styl'
 import { makeStyles } from '@material-ui/core/styles';
 import Card from '@material-ui/core/Card';
@@ -24,46 +25,57 @@ const GreenCheckbox = withStyles({
 })((props: CheckboxProps) => <Checkbox color="default" {...props} />);
 
 const DefaultData = {
-  colors: ['#80d8ff', '#ffd180', '#b2ff59', '#ffbb66'],
   todos:
-    [[
-      {
-        content: '第1个区域内 TODO 1第1个区域内 TODO 1第1个 1',
-        done: false,
-      },
-      {
-        content: '第1个区域内 TODO 2',
-        done: true,
-      }
-    ],
-    [
-      {
-        content: '第2个区域内 TODO 1',
-        done: false,
-      }
-    ],
-    [
-      {
-        content: '第3个区域内 TODO 1',
-        done: false,
-      }
-    ],
-    [
-      {
-        content: '第4个区域内 TODO 1',
-        done: false,
-      }
-    ]]
+    [{
+      background: '#80d8ff',
+      list: [
+        {
+          content: '第1个区域内 1第1个区域内 1第1个 1',
+          done: false,
+        },
+        {
+          content: '第1个区域内 2',
+          done: true,
+        }
+      ]
+    },
+    {
+      background: '#ffd180',
+      list: [
+        {
+          content: '第2个区域内 1',
+          done: false,
+        }
+      ]
+    },
+    {
+      background: '#b2ff59',
+      list: [
+        {
+          content: '第2个区域内 1',
+          done: false,
+        }
+      ]
+    },
+    {
+      background: '#ffbb66',
+      list: [
+        {
+          content: '第2个区域内 1',
+          done: false,
+        }
+      ]
+    }]
 }
 
 const methods = {
   JsonDeepCopy(obj: object) {
     return JSON.parse(JSON.stringify(obj))
   },
-  ColorGetFn(e: React.ChangeEvent<HTMLInputElement>, setColors: Function) {
+  ColorGetFn(e: React.ChangeEvent<HTMLInputElement>, setTodos: Function) {
     const ele = document.querySelector('#colorInput') as HTMLInputElement
     ele && (ele.value = e.currentTarget.value)
-    setColors([e.currentTarget.value, '#ffd180', '#b2ff59', '#ffbb66'])
+    setTodos([e.currentTarget.value, '#ffd180', '#b2ff59', '#ffbb66'])
   },
   ColorInputFn(e: React.ChangeEvent<HTMLInputElement>) {
     if (e.currentTarget.value.length !== 7) return
@@ -75,33 +87,41 @@ const methods = {
 
 
 const Operation: React.FC = () => {
-  const [colors, setColors]: [string[], Function] = useState(methods.JsonDeepCopy(DefaultData.colors))
-  type Todo = {
+  type TodoList = {
     content: string,
     done: boolean
   }
-  const [todos, setTodos]: [Array<Todo>[], Function] = useState(methods.JsonDeepCopy(DefaultData.todos))
+  type Todos = {
+    background: string,
+    list: TodoList[]
+  }
+  const [todos, setTodos]: [Todos[], Function] = useState(methods.JsonDeepCopy(DefaultData.todos))
+
 
   const handleChange = (index1: number, index2: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    todos[index1][index2].done = event.target.checked
-    console.log(todos, event.target.checked);
-    console.log(DefaultData);
-    // TODO: 现在setTodos无法渲染，尝试将todos和colors合并到一起，而不是循环两次
-    setTodos(todos);
+    // const temp = todos 如果不执行深拷贝，页面无法渲染
+    const temp = methods.JsonDeepCopy(todos)
+    temp[index1].list[index2].done = event.target.checked
+    setTodos(temp);
   };
   return (
     <>
       <div className="action-view">
-        {colors.map((background, index1) => {
+        {todos.map((todo, index1) => {
           return (
-            <div key={background} className='block' style={{ background }}>
+            <div key={index1} className='block' style={{ background: todo.background }}>
               <div className="todo-list">
-                {todos[index1].map((todo, index2) => (<div className='todo' key={index2}>
-                  <GreenCheckbox
-                    checked={todo.done}
-                    onChange={handleChange(index1, index2)}
+                {todo.list.map((todo, index2) => (<div className='todo' key={index2}>
+
+                  <FormControlLabel
+                    control={
+                      <GreenCheckbox
+                        checked={todo.done}
+                        onChange={handleChange(index1, index2)}
+                      />
+                    }
+                    label={todo.content}
                   />
-                  {todo.content}
                 </div>))}
               </div>
             </div>
@@ -110,7 +130,7 @@ const Operation: React.FC = () => {
         <div>
         </div>
       </div>
-      <input type="color" id="colorGet" onChange={e => methods.ColorGetFn(e, setColors)} />
+      <input type="color" id="colorGet" onChange={e => methods.ColorGetFn(e, setTodos)} />
       <input type="text" id="colorInput" onChange={e => methods.ColorInputFn(e)} />
       <br />
       <br />
